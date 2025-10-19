@@ -11,7 +11,7 @@ namespace Catalog.BLL.Services
 {
     public interface ICategoryService
     {
-        Task<CategoryDto> GetAsync(int id);
+        Task<CategoryDto?> GetAsync(int id);
         Task<IReadOnlyList<CategoryDto>> ListAsync();
         Task<CategoryDto> AddAsync(CreateCategoryDto dto);
         Task UpdateAsync(UpdateCategoryDto dto);
@@ -47,7 +47,7 @@ namespace Catalog.BLL.Services
             await _uow.SaveChangesAsync();
         }
 
-        public async Task<CategoryDto> GetAsync(int id)
+        public async Task<CategoryDto?> GetAsync(int id)
         {
             var e = await _uow.CategoryRepository.GetAsync(id);
             if (e == null) return null;

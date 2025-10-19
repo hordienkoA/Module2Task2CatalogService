@@ -20,7 +20,7 @@ namespace Catalog.DAL.Repositories
             return await q.AnyAsync(c => c.Name == name);
         }
 
-        public async Task<Category> GetAsync(int id) => await _db.Categories.FindAsync(id);
+        public async Task<Category?> GetAsync(int id) => await _db.Categories.FindAsync(id);
 
         public async Task<Category> GetWithChildrenAsync(int id) => await _db.Categories.Include(c => c.Products).FirstOrDefaultAsync(c => c.Id == id);
 
