@@ -1,0 +1,2 @@
+dotnet ef migrations add Initial -p Catalog.DAL -s Catalog.Service.Api
+dotnet ef database update -p Catalog.DAL -s Catalog.Service.Api
