@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.10" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
@@ -21,10 +22,15 @@
   <ItemGroup>
     <ProjectReference Include="..\Catalog.BLL\Catalog.BLL.csproj" />
     <ProjectReference Include="..\Catalog.DAL\Catalog.DAL.csproj" />
+    <ProjectReference Include="..\Catalog.Service.Api\Catalog.Service.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Integration\" />
   </ItemGroup>
 
 </Project>

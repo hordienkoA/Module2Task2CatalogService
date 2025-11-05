@@ -7,7 +7,7 @@ namespace Catalog.BLL.Services
     public interface IProductService
     {
         Task<ProductDto?> GetAsync(int id);
-        Task<IReadOnlyList<ProductDto>> ListAsync();
+        Task<IReadOnlyList<ProductDto>> ListAsync(int? categoryId, int page, int pageSize);
         Task<ProductDto> AddAsync(CreateProductDto dto);
         Task UpdateAsync(UpdateProductDto dto);
         Task DeleteAsync(int id);
@@ -58,9 +58,9 @@ namespace Catalog.BLL.Services
             return new ProductDto(e.Id, e.Name, e.Description, e.Image, e.CategoryId, e.Price, e.Amount);
         }
 
-        public async Task<IReadOnlyList<ProductDto>> ListAsync()
+        public async Task<IReadOnlyList<ProductDto>> ListAsync(int? categoryId, int page, int pageSize)
         {
-            var list = await _uow.ProductRepository.ListAsync();
+            var list = await _uow.ProductRepository.ListAsync(categoryId, page, pageSize);
             return list.Select(p => new ProductDto(p.Id, p.Name, p.Description, p.Image, p.CategoryId, p.Price, p.Amount)).ToList();
         }
 

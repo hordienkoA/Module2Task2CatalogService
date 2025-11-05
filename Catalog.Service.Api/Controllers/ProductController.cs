@@ -26,13 +26,28 @@ namespace Catalog.Service.Api.Controllers
                 return NotFound();
             }
 
-            return Ok(item);
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+
+            var response = new
+            {
+                item.Id,
+                item.Name,
+                links = new
+                {
+                    self = $"{baseUrl}{Url.Action(nameof(Get), new { id })}",
+                }
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("List")]
-        public async Task<IActionResult> GetList()
+        public async Task<IActionResult> GetList([FromQuery] int? categoryId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var items = await _productService.ListAsync();
+            if (page <= 0 || pageSize <= 0)
+                return BadRequest("Page and pageSize must be positive.");
+
+            var items = await _productService.ListAsync(categoryId, page, pageSize);
             return Ok(items);
         }
 
