@@ -15,20 +15,20 @@ namespace Catalog.Domain.Entities
 
         [Required]
         [MaxLength(50)]
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
 
         // optional, can contain html
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
 
         [Url]
-        public string Image { get; set; }
+        public string? Image { get; set; }
 
 
         [Required]
         public int CategoryId { get; set; }
-        public Category Category { get; set; }
+        public Category? Category { get; set; }
 
 
         [Required]

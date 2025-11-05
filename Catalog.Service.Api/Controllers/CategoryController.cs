@@ -24,8 +24,19 @@ namespace Catalog.Service.Api.Controllers
             {
                 return NotFound();
             }
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
 
-            return Ok(item);
+            var response = new
+            {
+                item.Id,
+                item.Name,
+                links = new
+                {
+                    self = $"{baseUrl}{Url.Action(nameof(Get), new { id })}",
+                    products = $"{baseUrl}{Url.Action("GetList", "Product", new { categoryId = id })}"
+                }
+            };
+            return Ok(response);
         }
 
         [HttpGet("List")]

@@ -41,8 +41,6 @@ namespace Catalog.BLL.Services
         {
             var entity = await _uow.CategoryRepository.GetAsync(id);
             if (entity == null) throw new ArgumentException("Category not found");
-            if (await _uow.CategoryRepository.HasChildrenAsync(id))
-                throw new InvalidOperationException("Category has children or products");
             _uow.CategoryRepository.Remove(entity);
             await _uow.SaveChangesAsync();
         }
