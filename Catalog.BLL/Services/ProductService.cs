@@ -1,4 +1,6 @@
-﻿using Catalog.Contracts.DTOs;
+﻿using CartService.API.MessageBroker.Messages;
+using CartService.BLL.Interfaces;
+using Catalog.Contracts.DTOs;
 using Catalog.DAL.UnitOfWork;
 using Catalog.Domain.Entities;
 
@@ -15,7 +17,11 @@ namespace Catalog.BLL.Services
     public class ProductService : IProductService
     {
         private readonly IUnitOfWork _uow;
-        public ProductService(IUnitOfWork uow) => _uow = uow;
+        private IRabbitMqPublisher _rabbitMqPublisher;
+        public ProductService(IUnitOfWork uow, IRabbitMqPublisher rabbitMqPublisher) {
+            _uow = uow;
+            _rabbitMqPublisher = rabbitMqPublisher;
+         }
 
         public async Task<ProductDto> AddAsync(CreateProductDto dto)
         {
@@ -83,7 +89,14 @@ namespace Catalog.BLL.Services
             entity.CategoryId = dto.CategoryId;
             entity.Price = dto.Price;
             entity.Amount = dto.Amount;
+            var message = new CatalogItemUpdatedEvent
+            {
+                ProductId = entity.Id,
+                Name = entity.Name,
+                Price = entity.Price,
+            };
 
+            await _rabbitMqPublisher.Publish(message, "catalog-updates");
             _uow.ProductRepository.Update(entity);
             await _uow.SaveChangesAsync();
         }
