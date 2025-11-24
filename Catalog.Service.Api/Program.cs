@@ -1,3 +1,5 @@
+using CartService.BLL.Interfaces;
+using CartService.BLL.Services;
 using Catalog.DAL;
 using Catalog.Service.Api.DiConfiguration;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +16,16 @@ public class Program
         builder.Services.AddDb(configuration);
         builder.Services.AddRepositories();
         builder.Services.AddUow();
+        builder.Services.AddSingleton<IRabbitMqPublisher>(sp =>
+        {
+            return new RabbitMqPublisher(
+                configuration.GetValue<string>("RabbitMq:Host"),
+                configuration.GetValue<string>("RabbitMq:UserName"),
+                configuration.GetValue<string>("RabbitMq:Password"));
+        });
         builder.Services.AddServices();
 
         builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
