@@ -1,6 +1,7 @@
 using Catalog.BLL.Services;
 using Catalog.Contracts.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Catalog.Service.Api.Controllers
 {
@@ -52,6 +53,7 @@ namespace Catalog.Service.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> Add(CreateProductDto product)
         {
             try
@@ -65,6 +67,7 @@ namespace Catalog.Service.Api.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> Update(UpdateProductDto product)
         {
             try
@@ -79,6 +82,7 @@ namespace Catalog.Service.Api.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> Delete([FromRoute]int id)
         {
             try
