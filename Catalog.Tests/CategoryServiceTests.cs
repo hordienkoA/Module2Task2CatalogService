@@ -1,4 +1,4 @@
-﻿using Catalog.BLL.Services;
+using Catalog.BLL.Services;
 using Catalog.Contracts.DTOs;
 using Catalog.Contracts.Interfaces;
 using Catalog.DAL.UnitOfWork;
@@ -10,7 +10,7 @@ namespace Catalog.Tests
     public class CategoryServiceTests
     {
         [Fact]
-        public async Task AddAsync_Valid_CreatesCategory()
+        public async Task AddAsyncValidCreatesCategory()
         {
             var uowMock = new Mock<IUnitOfWork>();
             var catRepoMock = new Mock<ICategoryRepository>();
@@ -19,12 +19,12 @@ namespace Catalog.Tests
             uowMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
             var svc = new CategoryService(uowMock.Object);
-            var dto = new CreateCategoryDto("New cat", null, null);
+            var dto = new CreateCategoryDto("New cat", string.Empty, null);
             var result = await svc.AddAsync(dto);
 
             Assert.Equal("New cat", result.Name);
             catRepoMock.Verify(r => r.AddAsync(It.IsAny<Category>()), Times.Once);
-            uowMock.Verify(u=>u.SaveChangesAsync(), Times.Once);
+            uowMock.Verify(u => u.SaveChangesAsync(), Times.Once);
         }
     }
 }

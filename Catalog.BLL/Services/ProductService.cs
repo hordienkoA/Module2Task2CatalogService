@@ -14,24 +14,33 @@ namespace Catalog.BLL.Services
         Task UpdateAsync(UpdateProductDto dto);
         Task DeleteAsync(int id);
     }
-    public class ProductService : IProductService
+    public class ProductService(IUnitOfWork uow, IRabbitMqPublisher rabbitMqPublisher) : IProductService
     {
-        private readonly IUnitOfWork _uow;
-        private IRabbitMqPublisher _rabbitMqPublisher;
-        public ProductService(IUnitOfWork uow, IRabbitMqPublisher rabbitMqPublisher) {
-            _uow = uow;
-            _rabbitMqPublisher = rabbitMqPublisher;
-         }
+        private readonly IUnitOfWork uow = uow;
+        private readonly IRabbitMqPublisher rabbitMqPublisher = rabbitMqPublisher;
 
         public async Task<ProductDto> AddAsync(CreateProductDto dto)
         {
             if (string.IsNullOrEmpty(dto.Name) || dto.Name.Length > 50)
+            {
                 throw new ArgumentException("Invalid product name");
-            if (dto.Price < 0) throw new ArgumentException("Price must be >= 0");
-            if (dto.Amount < 0) throw new ArgumentException("Amount must be >= 0");
+            }
 
-            var cat = await _uow.CategoryRepository.GetAsync(dto.CategoryId);
-            if (cat == null) throw new ArgumentException("Category not found");
+            if (dto.Price < 0)
+            {
+                throw new ArgumentException("Price must be >= 0");
+            }
+
+            if (dto.Amount < 0)
+            {
+                throw new ArgumentException("Amount must be >= 0");
+            }
+
+            var cat = await uow.CategoryRepository.GetAsync(dto.CategoryId);
+            if (cat == null)
+            {
+                throw new ArgumentException("Category not found");
+            }
 
             var entity = new Product
             {
@@ -43,45 +52,62 @@ namespace Catalog.BLL.Services
                 Amount = dto.Amount
             };
 
-            await _uow.ProductRepository.AddAsync(entity);
-            await _uow.SaveChangesAsync();
+            await uow.ProductRepository.AddAsync(entity);
+            await uow.SaveChangesAsync();
             return new ProductDto(entity.Id, entity.Name, entity.Description, entity.Image, entity.CategoryId, entity.Price, entity.Amount);
         }
 
         public async Task DeleteAsync(int id)
         {
-            var entity = await _uow.ProductRepository.GetAsync(id);
-            if (entity == null) throw new ArgumentException("Product not found");
+            var entity = await uow.ProductRepository.GetAsync(id);
+            if (entity == null)
+            {
+                throw new ArgumentException("Product not found");
+            }
 
-            _uow.ProductRepository.Remove(entity);
-            await _uow.SaveChangesAsync();
+            uow.ProductRepository.Remove(entity);
+            await uow.SaveChangesAsync();
         }
 
         public async Task<ProductDto?> GetAsync(int id)
         {
-            var e = await _uow.ProductRepository.GetAsync(id);
-            if (e == null) return null;
+            var e = await uow.ProductRepository.GetAsync(id);
+            if (e == null)
+            {
+                return null;
+            }
+
             return new ProductDto(e.Id, e.Name, e.Description, e.Image, e.CategoryId, e.Price, e.Amount);
         }
 
         public async Task<IReadOnlyList<ProductDto>> ListAsync(int? categoryId, int page, int pageSize)
         {
-            var list = await _uow.ProductRepository.ListAsync(categoryId, page, pageSize);
-            return list.Select(p => new ProductDto(p.Id, p.Name, p.Description, p.Image, p.CategoryId, p.Price, p.Amount)).ToList();
+            var list = await uow.ProductRepository.ListAsync(categoryId, page, pageSize);
+            return [.. list.Select(p => new ProductDto(p.Id, p.Name, p.Description, p.Image, p.CategoryId, p.Price, p.Amount))];
         }
 
         public async Task UpdateAsync(UpdateProductDto dto)
         {
-            var entity = await _uow.ProductRepository.GetAsync(dto.Id);
-            if (entity == null) throw new ArgumentException("Product not found");
-
+            var entity = await uow.ProductRepository.GetAsync(dto.Id) ?? throw new ArgumentException("Product not found");
             if (string.IsNullOrWhiteSpace(dto.Name) || dto.Name.Length > 50)
+            {
                 throw new ArgumentException("Invalid product name");
-            if (dto.Price < 0) throw new ArgumentException("Price must be >=0");
-            if (dto.Amount < 0) throw new ArgumentException("Amount must be >=0");
+            }
 
-            var cat = await _uow.CategoryRepository.GetAsync(dto.CategoryId);
-            if (cat == null) throw new ArgumentException("Category not found");
+            if (dto.Price < 0)
+            {
+                throw new ArgumentException("Price must be >=0");
+            }
+
+            if (dto.Amount < 0)
+            {
+                throw new ArgumentException("Amount must be >=0");
+            }
+
+            if (await uow.CategoryRepository.GetAsync(dto.CategoryId) == null)
+            {
+                throw new ArgumentException("Category not found");
+            }
 
             entity.Name = dto.Name.Trim();
             entity.Description = dto.Description;
@@ -96,9 +122,9 @@ namespace Catalog.BLL.Services
                 Price = entity.Price,
             };
 
-            await _rabbitMqPublisher.Publish(message, "catalog-updates");
-            _uow.ProductRepository.Update(entity);
-            await _uow.SaveChangesAsync();
+            await rabbitMqPublisher.Publish(message, "catalog-updates");
+            uow.ProductRepository.Update(entity);
+            await uow.SaveChangesAsync();
         }
     }
 }

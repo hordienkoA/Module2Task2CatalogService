@@ -1,11 +1,6 @@
 ﻿using Catalog.Contracts.DTOs;
 using Catalog.DAL.UnitOfWork;
 using Catalog.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Catalog.BLL.Services
 {
@@ -17,66 +12,82 @@ namespace Catalog.BLL.Services
         Task UpdateAsync(UpdateCategoryDto dto);
         Task DeleteAsync(int id);
     }
-    public class CategoryService : ICategoryService
+    public class CategoryService(IUnitOfWork uow) : ICategoryService
     {
-        private readonly IUnitOfWork _uow;
-        public CategoryService(IUnitOfWork uow)
-        {
-            _uow = uow;
-        }
+        private readonly IUnitOfWork uow = uow;
+
         public async Task<CategoryDto> AddAsync(CreateCategoryDto dto)
         {
             // simple validation. Can be rewriten to Fluent validation in future.
             if (string.IsNullOrEmpty(dto.Name) || dto.Name.Length > 50)
+            {
                 throw new ArgumentException("Invalid category name");
-            if (await _uow.CategoryRepository.ExistsByNameAsync(dto.Name))
+            }
+
+            if (await uow.CategoryRepository.ExistsByNameAsync(dto.Name))
+            {
                 throw new InvalidOperationException("Category with same name already exists");
+            }
+
             var entity = new Category { Name = dto.Name.Trim(), Image = dto.Image, ParentCategoryId = dto.ParentCategoryId };
-            await _uow.CategoryRepository.AddAsync(entity);
-            await _uow.SaveChangesAsync();
+            await uow.CategoryRepository.AddAsync(entity);
+            await uow.SaveChangesAsync();
             return new CategoryDto(entity.Id, entity.Name, entity.Image, entity.ParentCategoryId);
         }
 
         public async Task DeleteAsync(int id)
         {
-            var entity = await _uow.CategoryRepository.GetAsync(id);
-            if (entity == null) throw new ArgumentException("Category not found");
-            _uow.CategoryRepository.Remove(entity);
-            await _uow.SaveChangesAsync();
+            var entity = await uow.CategoryRepository.GetAsync(id);
+            if (entity == null)
+            {
+                throw new ArgumentException("Category not found");
+            }
+
+            uow.CategoryRepository.Remove(entity);
+            await uow.SaveChangesAsync();
         }
 
         public async Task<CategoryDto?> GetAsync(int id)
         {
-            var e = await _uow.CategoryRepository.GetAsync(id);
-            if (e == null) return null;
+            var e = await uow.CategoryRepository.GetAsync(id);
+            if (e == null)
+            {
+                return null;
+            }
+
             return new CategoryDto(e.Id, e.Name, e.Image, e.ParentCategoryId);
         }
 
         public async Task<IReadOnlyList<CategoryDto>> ListAsync()
         {
-            var list = await _uow.CategoryRepository.ListAsync();
-            return list.Select(c => new CategoryDto(c.Id, c.Name, c.Image, c.ParentCategoryId)).ToList();
+            var list = await uow.CategoryRepository.ListAsync();
+            return [.. list.Select(c => new CategoryDto(c.Id, c.Name, c.Image, c.ParentCategoryId))];
         }
 
         public async Task UpdateAsync(UpdateCategoryDto dto)
         {
-            var entity = await _uow.CategoryRepository.GetAsync(dto.Id);
-            if (entity == null) throw new ArgumentException("Category not found");
-
+            var entity = await uow.CategoryRepository.GetAsync(dto.Id);
+            if (entity == null)
+            {
+                throw new ArgumentException("Category not found");
+            }
 
             if (string.IsNullOrWhiteSpace(dto.Name) || dto.Name.Length > 50)
+            {
                 throw new ArgumentException("Invalid category name");
+            }
 
-
-            if (await _uow.CategoryRepository.ExistsByNameAsync(dto.Name, dto.Id))
+            if (await uow.CategoryRepository.ExistsByNameAsync(dto.Name, dto.Id))
+            {
                 throw new InvalidOperationException("Category with same name already exists");
+            }
 
             entity.Name = dto.Name.Trim();
             entity.Image = dto.Image;
             entity.ParentCategoryId = dto.ParentCategoryId;
 
-            _uow.CategoryRepository.Update(entity);
-            await _uow.SaveChangesAsync();
+            uow.CategoryRepository.Update(entity);
+            await uow.SaveChangesAsync();
         }
     }
 }

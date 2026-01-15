@@ -7,21 +7,14 @@ namespace Catalog.Service.Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class ProductController : ControllerBase
+    public class ProductController(IProductService productService) : ControllerBase
     {
-        private readonly IProductService _productService;
-        private readonly ILogger<ProductController> _logger;
-        public ProductController(IProductService productService, ILogger<ProductController> logger)
-        {
-            _productService = productService;
-            _logger = logger;
-        }
-
+        private readonly IProductService productService = productService;
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get([FromRoute]int id)
         {
-            var item = await _productService.GetAsync(id);
+            var item = await productService.GetAsync(id);
             if(item == null)
             {
                 return NotFound();
@@ -48,7 +41,7 @@ namespace Catalog.Service.Api.Controllers
             if (page <= 0 || pageSize <= 0)
                 return BadRequest("Page and pageSize must be positive.");
 
-            var items = await _productService.ListAsync(categoryId, page, pageSize);
+            var items = await productService.ListAsync(categoryId, page, pageSize);
             return Ok(items);
         }
 
@@ -58,7 +51,7 @@ namespace Catalog.Service.Api.Controllers
         {
             try
             {
-                var result = await _productService.AddAsync(product);
+                var result = await productService.AddAsync(product);
                 return Ok(result);
             }
             catch (Exception ex) {
@@ -72,7 +65,7 @@ namespace Catalog.Service.Api.Controllers
         {
             try
             {
-                await _productService.UpdateAsync(product);
+                await productService.UpdateAsync(product);
                 return Ok();
             }
             catch(Exception ex) 
@@ -87,7 +80,7 @@ namespace Catalog.Service.Api.Controllers
         {
             try
             {
-                await _productService.DeleteAsync(id);
+                await productService.DeleteAsync(id);
                 return Ok();
             }
             catch (Exception ex) {

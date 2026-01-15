@@ -4,101 +4,102 @@ using Catalog.Service.Api.DiConfiguration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 
-public class Program
+namespace Catalog.Service.Api
 {
-    public static void Main(string[] args)
+    public class Program
     {
-        var builder = WebApplication.CreateBuilder(args);
-
-        // Add services to the container.
-        var configuration = builder.Configuration;
-
-        builder.Services.AddDb(configuration);
-
-
-        builder.Services.AddIdentityConfiguration(configuration);
-
-        builder.Services.AddRepositories();
-        builder.Services.AddUow();
-        builder.Services.AddSingleton<IRabbitMqPublisher>(sp =>
+        public static void Main(string[] args)
         {
-            return new RabbitMqPublisher(
-                configuration.GetValue<string>("RabbitMq:Host"),
-                configuration.GetValue<string>("RabbitMq:UserName"),
-                configuration.GetValue<string>("RabbitMq:Password"));
-        });
-        builder.Services.AddServices();
-        
+            var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddAuthorization();
+            // Add services to the container.
+            var configuration = builder.Configuration;
 
-        builder.Services.AddControllers();
-        builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddDb(configuration);
 
-        // Swagger + JWT authorization button
-        builder.Services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Catalog API", Version = "v1" });
 
-            var jwtScheme = new OpenApiSecurityScheme
+            builder.Services.AddIdentityConfiguration(configuration);
+
+            builder.Services.AddRepositories();
+            builder.Services.AddUow();
+            builder.Services.AddSingleton<IRabbitMqPublisher>(sp =>
             {
-                Scheme = "bearer",
-                BearerFormat = "JWT",
-                Name = "Authorization",
-                In = ParameterLocation.Header,
-                Type = SecuritySchemeType.Http,
-                Description = "Enter 'Bearer' [space] and then your JWT token.",
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            };
-
-            c.AddSecurityDefinition("Bearer", jwtScheme);
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                { jwtScheme, new string[] { } }
+                string host = configuration.GetValue<string>("RabbitMq:Host") ?? throw new InvalidOperationException("RabbitMq:Host configuration is missing.");
+                string userName = configuration.GetValue<string>("RabbitMq:UserName") ?? throw new InvalidOperationException("RabbitMq:UserName configuration is missing.");
+                string password = configuration.GetValue<string>("RabbitMq:Password") ?? throw new InvalidOperationException("RabbitMq:Password configuration is missing.");
+                return new RabbitMqPublisher(host, userName, password);
             });
-        });
+            builder.Services.AddServices();
 
-        var app = builder.Build();
+            builder.Services.AddAuthorization();
 
-        // Ensure predefined roles exist
-        using (var scope = app.Services.CreateScope())
-        {
-            var services = scope.ServiceProvider;
-            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-            var roles = new[] { "Manager", "Store customer" };
-            foreach (var role in roles)
+            builder.Services.AddControllers();
+            builder.Services.AddEndpointsApiExplorer();
+
+            // Swagger + JWT authorization button
+            builder.Services.AddSwaggerGen(c =>
             {
-                var exists = roleManager.RoleExistsAsync(role).GetAwaiter().GetResult();
-                if (!exists)
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Catalog API", Version = "v1" });
+
+                var jwtScheme = new OpenApiSecurityScheme
                 {
-                    roleManager.CreateAsync(new IdentityRole(role)).GetAwaiter().GetResult();
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Description = "Enter 'Bearer' [space] and then your JWT token.",
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                };
+
+                c.AddSecurityDefinition("Bearer", jwtScheme);
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    { jwtScheme, Array.Empty<string>() }
+                });
+            });
+
+            var app = builder.Build();
+
+            // Ensure predefined roles exist
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                var roles = new[] { "Manager", "Store customer" };
+                foreach (var role in roles)
+                {
+                    var exists = roleManager.RoleExistsAsync(role).GetAwaiter().GetResult();
+                    if (!exists)
+                    {
+                        roleManager.CreateAsync(new IdentityRole(role)).GetAwaiter().GetResult();
+                    }
                 }
             }
+
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
+            app.UseHttpsRedirection();
+
+            app.UseRouting();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.MapControllers();
+
+            app.Run();
         }
-
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
-
-        app.UseHttpsRedirection();
-
-        app.UseRouting();
-
-        app.UseAuthentication();
-        app.UseAuthorization();
-
-        app.MapControllers();
-
-        app.Run();
     }
-    
 }
 
