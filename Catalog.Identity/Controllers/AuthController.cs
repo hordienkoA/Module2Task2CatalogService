@@ -1,4 +1,4 @@
-﻿using Catalog.Identity.Data;
+using Catalog.Identity.Data;
 using Catalog.Identity.Models;
 using Catalog.Identity.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -17,20 +17,16 @@ namespace Catalog.Identity.Controllers
         private readonly JwtTokenService _jwt;
         private readonly AuthDbContext _db;
         private readonly IAuthService _authService;
-        private readonly ILogger<AuthController> _logger;
-
         public AuthController(
             UserManager<IdentityUser> userManager,
             JwtTokenService jwt,
             AuthDbContext db,
-            IAuthService authService,
-            ILogger<AuthController> logger)
+            IAuthService authService)
         {
             _userManager = userManager;
             _jwt = jwt;
             _db = db;
             _authService = authService;
-            _logger = logger;
         }
 
         [HttpPost("token")]

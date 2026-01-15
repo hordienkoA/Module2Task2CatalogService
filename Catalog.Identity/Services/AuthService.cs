@@ -1,4 +1,4 @@
-﻿using Catalog.Identity.Data;
+using Catalog.Identity.Data;
 using Catalog.Identity.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;

@@ -9,21 +9,15 @@ namespace Catalog.Service.Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class CategoryController: ControllerBase
+    public class CategoryController(ICategoryService categoryService) : ControllerBase
     {
-        private readonly ICategoryService _categoryService;
-        private readonly ILogger<CategoryController> _logger;
-        public CategoryController(ICategoryService categoryService, ILogger<CategoryController> logger)
-        {
-            _categoryService = categoryService;
-            _logger = logger;
-        }
+        private readonly ICategoryService categoryService = categoryService;
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get([FromRoute] int id)
         {
-            var item = await _categoryService.GetAsync(id);
-            if(item == null)
+            var item = await categoryService.GetAsync(id);
+            if (item == null)
             {
                 return NotFound();
             }
@@ -45,7 +39,7 @@ namespace Catalog.Service.Api.Controllers
         [HttpGet("List")]
         public async Task<IActionResult> GetList()
         {
-            var items = await _categoryService.ListAsync();
+            var items = await categoryService.ListAsync();
             return Ok(items);
         }
 
@@ -55,7 +49,7 @@ namespace Catalog.Service.Api.Controllers
         {
             try
             {
-                var result = await _categoryService.AddAsync(category);
+                var result = await categoryService.AddAsync(category);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -90,7 +84,7 @@ namespace Catalog.Service.Api.Controllers
         {
             try
             {
-                await _categoryService.UpdateAsync(category);
+                await categoryService.UpdateAsync(category);
                 return Ok();
             }
             catch (Exception ex)
@@ -105,7 +99,7 @@ namespace Catalog.Service.Api.Controllers
         {
             try
             {
-                await _categoryService.DeleteAsync(id);
+                await categoryService.DeleteAsync(id);
                 return Ok();
             }
             catch (Exception ex)

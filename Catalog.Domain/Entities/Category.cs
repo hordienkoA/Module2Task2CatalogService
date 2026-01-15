@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Catalog.Domain.Entities
 {
@@ -9,7 +9,7 @@ namespace Catalog.Domain.Entities
 
         [Required]
         [MaxLength(50)]
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
 
         [Url]
@@ -17,9 +17,10 @@ namespace Catalog.Domain.Entities
 
 
         public int? ParentCategoryId { get; set; }
-        public Category? ParentCategory { get; set; }
+
+        public Category ParentCategory { get; set; }
 
 
-        public ICollection<Product> Products { get; set; } = new List<Product>();
+        public ICollection<Product> Products { get; set; } = [];
     }
 }
