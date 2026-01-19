@@ -1,0 +1,40 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  catalog-api:
+    build:
+      context: ./Module2Task2/Catalog.Service.Api
+      dockerfile: Catalog.Service.Api/Dockerfile
+    ports:
+      - "5001:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - catalog_data:/app/Data
+  cart-service:
+    build:
+      context: ./Module2Task1/WebApplication
+      dockerfile: CartService.API/Dockerfile
+    ports:
+      - "5002:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - cart_data:/app/Data 
+volumes:
+  catalog_data:
+  cart_data:
