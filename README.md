@@ -4,3 +4,5 @@
 - Change db (from example from SQLLite to SQL Server). 1 day
 - Add more complex validation with FluentValidation. 1 day
 - Introduce Caching with Redis or MemoryCache. 1-2 day
+
+## !Please, use docker-compose file outside of solutions folder(cart and catalog) !
