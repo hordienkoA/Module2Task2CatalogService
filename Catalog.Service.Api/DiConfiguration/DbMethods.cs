@@ -1,4 +1,4 @@
-﻿using Catalog.DAL;
+using Catalog.DAL;
 using Catalog.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,10 +9,12 @@ namespace Catalog.Service.Api.DiConfiguration
         public static IServiceCollection AddDb(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<CatalogDbContext>(options =>
-    options.UseSqlite(configuration.GetConnectionString("CatalogSqlite")));
+    options.UseSqlite(configuration.GetConnectionString("DefaultConnection"),
+    x => x.MigrationsAssembly("Catalog.DAL")));
 
             services.AddDbContext<AuthDbContext>(options =>
-            options.UseSqlite(configuration.GetConnectionString("CatalogSqlite")));
+            options.UseSqlite(configuration.GetConnectionString("DefaultConnection"),
+    x => x.MigrationsAssembly("Catalog.Identity")));
             return services;
         }
     }

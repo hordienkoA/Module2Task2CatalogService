@@ -1,7 +1,10 @@
 using CartService.BLL.Interfaces;
 using CartService.BLL.Services;
+using Catalog.DAL;
+using Catalog.Identity.Data;
 using Catalog.Service.Api.DiConfiguration;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 namespace Catalog.Service.Api
@@ -70,6 +73,12 @@ namespace Catalog.Service.Api
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
+                var db = services.GetRequiredService<CatalogDbContext>();
+                db.Database.Migrate();
+
+                var authDb = services.GetRequiredService<AuthDbContext>();
+                authDb.Database.Migrate();
+
                 var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                 var roles = new[] { "Manager", "Store customer" };
                 foreach (var role in roles)
